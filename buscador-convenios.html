@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<title>Bold · Buscador de Convenios</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  /* Bold OS dark palette */
+  --bg-base:#0a0e14; --bg-surface:#121821; --bg-elevated:#1a2230; --bg-soft:#0f141c;
+  --border:#1f2937; --border-soft:#18202c; --border-strong:#2a3548;
+  --cyan:#06ffe1; --cyan-dim:#04bfaa; --cyan-glow:rgba(6,255,225,.15);
+  --magenta:#f85cff; --magenta-dim:#c142cb; --magenta-glow:rgba(248,92,255,.12);
+  --text:#e6eaf2; --text-muted:#8a96a8; --text-dim:#5a6678;
+  --positive:#22d39a; --positive-tint:rgba(34,211,154,.12);
+  --negative:#ff5577; --warning:#ffb547; --warning-tint:rgba(255,181,71,.12);
+  /* Legacy aliases mapped to Bold tokens */
+  --nv:var(--bg-elevated); --nv2:var(--bg-soft);
+  --bl:var(--cyan); --aq:var(--magenta);
+  --sd:var(--bg-base); --w:var(--bg-surface);
+  --g1:var(--bg-elevated); --g2:var(--border); --g4:var(--text-dim); --g6:var(--text-muted); --g9:var(--text);
+  --gn:var(--positive); --gna:var(--positive-tint); --lb:var(--cyan-glow);
+  --am:var(--warning); --ama:var(--warning-tint);
+  --cs:var(--positive); --csa:var(--positive-tint); --sust:var(--positive);
+  --font-sans:"Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,sans-serif;
+  --font-mono:"JetBrains Mono","SF Mono",Menlo,monospace;
+}
+html,body{height:100%;font-family:var(--font-sans);background:var(--bg-base);color:var(--text);font-size:14px;overflow:hidden;background-image:radial-gradient(at 12% 8%,rgba(6,255,225,.04) 0,transparent 50%),radial-gradient(at 88% 92%,rgba(248,92,255,.03) 0,transparent 50%);background-attachment:fixed;}
+#fixed-top{position:fixed;top:0;left:0;right:0;z-index:500;box-shadow:0 2px 14px rgba(0,0,0,.18);}
+
+/* Topbar */
+.topbar{background:var(--bg-surface);height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid var(--border);}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo img{height:22px;width:auto;display:block;flex-shrink:0;filter:drop-shadow(0 0 8px rgba(6,255,225,.25));}
+.logo-badge{font-size:9px;font-weight:700;color:var(--text-muted);border:1px solid var(--border-strong);border-radius:4px;padding:3px 8px;letter-spacing:.7px;text-transform:uppercase;font-family:var(--font-mono);}
+.demo-pill{font-size:9px;font-weight:700;background:var(--magenta-glow);color:var(--magenta);border:1px solid rgba(248,92,255,.3);border-radius:20px;padding:3px 10px;letter-spacing:.5px;font-family:var(--font-mono);}
+
+/* Client strip */
+.client-strip{background:var(--bg-soft);height:44px;display:flex;align-items:center;padding:0 16px 0 20px;border-top:1px solid var(--border-soft);}
+.cs-name{font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;flex-shrink:0;}
+.cs-empresa{font-size:11px;color:var(--text-dim);margin-left:5px;white-space:nowrap;flex-shrink:0;}
+.cs-div{width:1px;height:16px;background:var(--border-strong);margin:0 12px;flex-shrink:0;}
+.cs-tags{display:flex;align-items:center;gap:5px;flex:1;min-width:0;overflow:hidden;}
+.cs-tag{font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0;}
+.t-crop{background:var(--bg-elevated);color:var(--text);border:1px solid var(--border);}
+.t-etapa{background:var(--magenta-glow);color:var(--magenta);border:1px solid rgba(248,92,255,.25);}
+.t-meta{background:var(--bg-soft);color:var(--text-muted);border:1px solid var(--border-soft);}
+/* Sust pill */
+.cs-sust{display:flex;align-items:center;gap:4px;background:var(--positive-tint);border:1px solid rgba(34,211,154,.3);border-radius:20px;padding:3px 9px;color:var(--positive);font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0;margin-left:6px;}
+.cs-right{display:flex;align-items:center;gap:6px;margin-left:auto;flex-shrink:0;}
+.cs-btn{display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--text-muted);background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:6px;transition:all .15s;white-space:nowrap;}
+.cs-btn:hover{background:var(--bg-elevated);color:var(--cyan);}
+.cs-btn svg{transition:transform .25s;}
+.cs-btn.open svg{transform:rotate(180deg);}
+
+/* Collapsible */
+.detail-panel{background:var(--bg-soft);border-top:1px solid var(--border);overflow:hidden;max-height:0;transition:max-height .32s cubic-bezier(.4,0,.2,1);}
+.detail-panel.open{max-height:280px;}
+.detail-inner{display:flex;gap:0;padding:14px 20px 16px;align-items:flex-start;}
+.d-poly{flex-shrink:0;margin-right:18px;}
+.d-poly svg{border-radius:10px;border:1px solid var(--border-strong);display:block;background:var(--bg-elevated);}
+.d-body{flex:1;min-width:0;}
+.d-cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px 18px;}
+.dc-lbl{font-size:9px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;font-family:var(--font-mono);}
+.dc-val{font-size:12px;font-weight:700;color:var(--text);}
+.dc-sub{font-size:11px;color:var(--g6);margin-top:2px;line-height:1.35;}
+.h-chips{display:flex;gap:3px;flex-wrap:wrap;margin-top:4px;}
+.h-chip{font-size:10px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:5px;padding:2px 6px;color:var(--text-muted);}
+/* Sust card in panel */
+.sust-card{background:linear-gradient(135deg,var(--positive-tint),rgba(34,211,154,.04));border:1px solid rgba(34,211,154,.25);border-radius:10px;padding:10px 13px;margin-top:10px;display:flex;gap:10px;align-items:flex-start;}
+.sust-icon{font-size:18px;line-height:1;flex-shrink:0;}
+.sust-title{font-size:11px;font-weight:700;color:var(--positive);margin-bottom:2px;text-transform:uppercase;letter-spacing:.5px;}
+.sust-body{font-size:10px;color:var(--positive);line-height:1.5;opacity:.85;}
+.sust-scores{display:flex;gap:6px;margin-top:6px;}
+.ss{background:var(--bg-elevated);border:1px solid rgba(34,211,154,.25);border-radius:6px;padding:4px 8px;text-align:center;}
+.ss-v{font-size:13px;font-weight:800;color:var(--positive);font-family:var(--font-mono);}
+.ss-l{font-size:8px;color:var(--positive);font-weight:700;text-transform:uppercase;letter-spacing:.3px;opacity:.7;}
+
+/* Main */
+#main-wrap{height:100%;display:flex;flex-direction:column;transition:padding-top .3s cubic-bezier(.4,0,.2,1);}
+.screen{display:none;flex:1;flex-direction:column;overflow:hidden;}
+.screen.active{display:flex;}
+
+/* Loading */
+#scr-loading{background:var(--bg-base);align-items:center;justify-content:center;}
+.load-box{display:flex;flex-direction:column;align-items:center;gap:20px;}
+.spin{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--cyan);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-title{font-size:18px;font-weight:800;color:var(--text);text-align:center;}
+.load-sub{font-size:12px;color:var(--g4);text-align:center;margin-top:3px;}
+.load-steps{width:100%;max-width:300px;}
+.lstep{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);}
+.lstep:last-child{border:none;}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.dot.done{background:var(--positive);}
+.dot.run{background:var(--cyan);box-shadow:0 0 10px var(--cyan);animation:pulse .8s ease infinite;}
+.dot.wait{background:var(--border-strong);}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.lstx{font-size:12px;color:var(--text);}
+
+/* Results */
+#scr-reco{flex:1;overflow:hidden;}
+.cat-bar{display:flex;gap:5px;padding:9px 16px;background:var(--bg-surface);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none;}
+.cat-bar::-webkit-scrollbar{display:none;}
+.cat-chip{font-size:11px;font-weight:600;padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:var(--bg-elevated);color:var(--text-muted);cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0;}
+.cat-chip:hover{border-color:var(--cyan);color:var(--cyan);background:rgba(6,255,225,.05);}
+.cat-chip.active{background:var(--cyan);color:var(--bg-base);border-color:var(--cyan);font-weight:700;}
+.cat-chip .n{font-size:9px;opacity:.5;margin-left:3px;}
+.reco-panes{display:grid;grid-template-columns:400px 1fr;flex:1;min-height:0;overflow:hidden;}
+.list-col{border-right:1px solid var(--border);background:var(--bg-surface);overflow-y:auto;}
+.list-inner{padding:12px 14px 24px;}
+.det-col{background:var(--bg-base);overflow-y:auto;padding:18px 20px 28px;}
+
+/* Cards */
+.ccard{background:var(--bg-surface);border-radius:13px;border:1px solid var(--border);padding:13px 14px;margin-bottom:9px;cursor:pointer;transition:border-color .15s,box-shadow .15s;position:relative;}
+.ccard:hover{border-color:var(--cyan);box-shadow:0 2px 14px rgba(6,255,225,.08);}
+.ccard.selected{border-color:var(--cyan);border-width:1.5px;box-shadow:0 2px 16px rgba(6,255,225,.15);}
+.rnk{position:absolute;top:12px;right:12px;width:20px;height:20px;border-radius:50%;background:var(--cyan);color:var(--bg-base);font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);}
+.ctop{display:flex;align-items:center;gap:10px;}
+.cico{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;}
+.cnm{font-size:13px;font-weight:700;color:var(--text);padding-right:26px;line-height:1.2;}
+.cct{font-size:10px;color:var(--g4);margin-top:2px;}
+.cfit{display:flex;align-items:center;gap:8px;margin-top:9px;}
+.cfit-bg{flex:1;height:3px;background:var(--g2);border-radius:2px;overflow:hidden;}
+.cfit-fill{height:100%;border-radius:2px;transition:width .5s ease;}
+.ctags{display:flex;gap:4px;margin-top:7px;flex-wrap:wrap;}
+.tpill{font-size:10px;padding:2px 7px;border-radius:7px;font-weight:600;}
+.tg{background:var(--positive-tint);color:var(--positive);}
+.tb{background:var(--cyan-glow);color:var(--cyan);}
+.ta{background:var(--warning-tint);color:var(--warning);}
+.tgr{background:var(--bg-elevated);color:var(--text-dim);}
+.crop-bk{display:flex;gap:4px;margin-top:7px;flex-wrap:wrap;}
+.crop-ha{font-size:10px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:2px 7px;color:var(--text);font-weight:600;}
+
+/* Detail */
+.det-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;color:var(--g4);}
+.det-card{background:var(--bg-surface);border-radius:16px;border:1px solid var(--border);overflow:hidden;margin-bottom:14px;}
+.det-hdr{background:linear-gradient(135deg,var(--bg-elevated),rgba(6,255,225,.06));padding:15px 18px;border-bottom:1px solid var(--border);}
+.det-hero{display:flex;align-items:center;gap:12px;}
+.det-ico{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;}
+.det-nm{font-size:16px;font-weight:800;color:var(--text);letter-spacing:-.3px;}
+.det-cat{font-size:10px;color:var(--text-muted);margin-top:2px;text-transform:uppercase;letter-spacing:.5px;}
+.expl-block{border-radius:10px;padding:11px 13px;margin:12px 18px 0;font-size:12px;line-height:1.65;border-left:3px solid;}
+.expl-block strong{font-weight:700;}
+.expl-blue{background:var(--cyan-glow);border-color:var(--cyan);color:var(--text);}
+.expl-green{background:var(--positive-tint);border-color:var(--positive);color:var(--text);}
+.expl-tag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px;opacity:.6;}
+.cgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px 18px;}
+.cbox{background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;padding:10px 11px;}
+.clbl{font-size:10px;color:var(--g4);margin-bottom:3px;}
+.cv{font-size:15px;font-weight:800;color:var(--text);}
+.cv-g{color:var(--gn);}
+.subs-hdr{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--g4);padding:4px 18px 6px;}
+.subs-wrap{padding:0 18px 14px;}
+.sub-row{background:var(--bg-elevated);border-radius:10px;border:1px solid var(--border);padding:9px 12px;margin-bottom:6px;display:flex;align-items:center;gap:9px;}
+.smon{width:32px;height:16px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;flex-shrink:0;}
+.sars{background:var(--cyan-glow);color:var(--cyan);}
+.susd{background:var(--positive-tint);color:var(--positive);}
+.sds{font-size:11px;font-weight:600;color:var(--text);flex:1;}
+.stna{text-align:right;}
+.stna-v{font-size:14px;font-weight:800;color:var(--text);font-family:var(--font-mono);}
+.stna-v.green{color:var(--positive);}
+.stna-l{font-size:9px;color:var(--g4);}
+.ssub{font-size:9px;color:var(--am);font-weight:600;margin-top:1px;}
+.cta-section{padding:4px 18px 18px;display:flex;flex-direction:column;gap:8px;}
+.cta-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.cta-btn{display:flex;align-items:center;gap:8px;padding:12px 13px;border-radius:12px;border:none;cursor:pointer;font-family:inherit;transition:opacity .15s;text-align:left;}
+.cta-btn:hover{opacity:.87;}
+.cta-exec{background:var(--cyan);color:var(--bg-base);font-weight:700;}
+.cta-prov{background:var(--positive);color:var(--bg-base);font-weight:700;}
+.cta-share{background:var(--bg-elevated);color:var(--cyan);border:1px solid var(--border-strong);justify-content:center;gap:7px;}
+.cta-share:hover{background:var(--cyan-glow);border-color:var(--cyan);}
+.cta-ico{width:26px;height:26px;border-radius:7px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.cta-title{font-size:12px;font-weight:700;color:inherit;}
+.cta-sub{font-size:10px;opacity:.65;font-weight:500;}
+
+/* Modals */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:600;display:none;align-items:flex-end;justify-content:center;}
+.modal-bg.show{display:flex;}
+.modal{background:var(--bg-surface);border:1px solid var(--border);border-bottom:none;border-radius:20px 20px 0 0;padding:18px 22px 34px;width:100%;max-width:480px;animation:slideUp .28s ease;}
+@keyframes slideUp{from{transform:translateY(36px);opacity:0}to{transform:translateY(0);opacity:1}}
+.mhandle{width:32px;height:4px;background:var(--border-strong);border-radius:2px;margin:0 auto 14px;}
+.mtl{font-size:17px;font-weight:700;margin-bottom:4px;color:var(--text);}
+.mst{font-size:12px;color:var(--g4);margin-bottom:16px;line-height:1.5;}
+.exec-card{display:flex;align-items:center;gap:12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:13px;padding:12px 14px;margin-bottom:14px;}
+.exec-av{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--cyan-dim));display:flex;align-items:center;justify-content:center;color:var(--bg-base);font-size:14px;font-weight:800;flex-shrink:0;}
+.exec-nm{font-size:14px;font-weight:700;}
+.exec-ro{font-size:11px;color:var(--g4);}
+.exec-suc{font-size:10px;color:var(--cyan);font-weight:600;margin-top:2px;}
+.mopt{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);cursor:pointer;}
+.mopt:last-of-type{border:none;}
+.mopt:hover .mopt-nm{color:var(--cyan);}
+.mopt-ico{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.mopt-nm{font-size:13px;font-weight:600;color:var(--text);}
+.mopt-st{font-size:11px;color:var(--g4);margin-top:1px;}
+.mopt-arr{margin-left:auto;color:var(--g4);font-size:18px;}
+.mbtn-cancel{width:100%;padding:12px;background:none;border:1px solid var(--border-strong);border-radius:12px;font-size:13px;font-weight:600;color:var(--text-muted);cursor:pointer;font-family:inherit;margin-top:14px;}
+.prov-card{background:linear-gradient(135deg,var(--positive-tint),rgba(34,211,154,.04));border-radius:13px;padding:12px 15px;margin-bottom:13px;border:1px solid rgba(34,211,154,.25);}
+.prov-to{font-size:9px;font-weight:700;color:var(--cs);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;}
+.prov-name{font-size:14px;font-weight:800;color:var(--positive);}
+.prov-sub{font-size:11px;color:var(--cs);margin-top:1px;}
+.email-preview{background:var(--bg-elevated);border-radius:12px;padding:12px 14px;margin-bottom:13px;border-left:3px solid var(--cyan);}
+.ep-subject{font-size:11px;font-weight:700;color:var(--text);margin-bottom:7px;}
+.ep-body{font-size:12px;color:var(--g6);line-height:1.6;}
+.ep-hi{color:var(--cyan);font-weight:700;}
+.send-btn{width:100%;padding:13px;background:var(--cyan);color:var(--bg-base);border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .15s;}
+.send-btn:hover{opacity:.88;}
+</style>
+</head>
+<body>
+
+<div id="fixed-top">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="logo">
+      <img alt="Bold" src="data:image/png;base64,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">
+      <span class="logo-badge">BUSCADOR DE CONVENIOS</span>
+    </div>
+    <span class="demo-pill">DEMO 2.0</span>
+  </div>
+
+  <!-- Client strip -->
+  <div class="client-strip">
+    <span class="cs-name">Los Sauces</span>
+    <span class="cs-empresa">· Siyenta S.A.</span>
+    <div class="cs-div"></div>
+    <div class="cs-tags">
+      <span class="cs-tag t-crop">🌾 Soja 210 ha</span>
+      <span class="cs-tag t-crop">🌽 Maíz 130 ha</span>
+      <span class="cs-tag t-etapa">Pre-siembra</span>
+      <span class="cs-tag t-meta">📍 Córdoba</span>
+    </div>
+    <!-- Sust badge -->
+    <div class="cs-sust" title="Score de sustentabilidad 84/100 — rotación verificada en 5 campañas">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2C8.5 5 7 9 9 13c-3-1-5-4-4-8C2 8 2 16 8 19c-1-3 1-6 4-7-1 3 0 6 2 8 2-2 3-5 2-8 3 1 4 4 3 7 5-3 6-10 3-14-1 3-3 5-6 6 1-4 0-7-4-9z" fill="#22d39a"/>
+      </svg>
+      Sustentable · 84
+    </div>
+    <div class="cs-right">
+      <button class="cs-btn" id="btn-detail" onclick="toggleDetail()">
+        Detalle del lote
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+          <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Collapsible detail -->
+  <div class="detail-panel" id="detail-panel">
+    <div class="detail-inner">
+      <!-- Mock polygon: two-zone multicrop -->
+      <div class="d-poly">
+        <svg width="124" height="124" viewBox="0 0 124 124">
+          <defs>
+            <pattern id="g" width="8" height="8" patternUnits="userSpaceOnUse">
+              <path d="M 8 0 L 0 0 0 8" fill="none" stroke="#2a3548" stroke-width=".3"/>
+            </pattern>
+            <clipPath id="lc">
+              <polygon points="22,86 16,50 36,22 72,16 100,34 104,72 82,98 48,102"/>
+            </clipPath>
+          </defs>
+          <rect width="124" height="124" fill="#1a2230" rx="9"/>
+          <rect width="124" height="124" fill="url(#g)" rx="9"/>
+          <!-- Soja zone -->
+          <polygon points="22,86 16,50 36,22 72,16 80,50 56,72 40,92" fill="#C8E6C9" fill-opacity=".85" clip-path="url(#lc)"/>
+          <!-- Maíz zone -->
+          <polygon points="56,72 80,50 100,34 104,72 82,98 48,102 40,92" fill="#FFF9C4" fill-opacity=".85" clip-path="url(#lc)"/>
+          <!-- Border -->
+          <polygon points="22,86 16,50 36,22 72,16 100,34 104,72 82,98 48,102" fill="none" stroke="#06ffe1" stroke-width="1.5"/>
+          <!-- Labels -->
+          <text x="43" y="55" text-anchor="middle" font-size="8" fill="#2E7D32" font-weight="700" font-family="sans-serif">🌾 210ha</text>
+          <text x="77" y="78" text-anchor="middle" font-size="8" fill="#B86B00" font-weight="700" font-family="sans-serif">🌽 130ha</text>
+        </svg>
+      </div>
+
+      <div class="d-body">
+        <div class="d-cols">
+          <div>
+            <div class="dc-lbl">Partido</div>
+            <div class="dc-val">General Roca</div>
+            <div class="dc-sub">Córdoba · Zona núcleo</div>
+          </div>
+          <div>
+            <div class="dc-lbl">Campaña actual</div>
+            <div class="dc-val">Soja + Maíz · 340 ha</div>
+            <div class="dc-sub">Pre-siembra · Oct 2025</div>
+          </div>
+          <div>
+            <div class="dc-lbl">Condición hídrica</div>
+            <div class="dc-val" style="color:var(--gn)">✓ Normal</div>
+            <div class="dc-sub">Sin estrés hídrico</div>
+          </div>
+          <div>
+            <div class="dc-lbl">Historial · 5 campañas</div>
+            <div class="h-chips">
+              <span class="h-chip">🌾 Soja 24/25</span>
+              <span class="h-chip">🌽 Maíz 23/24</span>
+              <span class="h-chip">🌾 Soja 22/23</span>
+              <span class="h-chip">🌽 Maíz 21/22</span>
+              <span class="h-chip">🌿 Trigo 20/21</span>
+            </div>
+          </div>
+          <div>
+            <div class="dc-lbl">Rotación verificada</div>
+            <div class="dc-val" style="color:var(--gn)">Soja / Maíz / Trigo</div>
+            <div class="dc-sub">3 cultivos · 5 campañas</div>
+          </div>
+          <div>
+            <div class="dc-lbl">Perfil crediticio</div>
+            <div class="dc-val" style="color:var(--bl)">Bajo riesgo</div>
+            <div class="dc-sub">Actividad continua desde 2020</div>
+          </div>
+        </div>
+
+        <!-- Sustainability card inside panel -->
+        <div class="sust-card">
+          <div class="sust-icon">🌱</div>
+          <div style="flex:1;min-width:0;">
+            <div class="sust-title">Score de sustentabilidad verificado</div>
+            <div class="sust-body">Rotación Soja → Maíz → Trigo sin indicios de deforestación. Preservación de suelo y diversificación productiva reducen el riesgo crediticio del establecimiento.</div>
+            <div class="sust-scores">
+              <div class="ss"><div class="ss-v">87</div><div class="ss-l">Suelo</div></div>
+              <div class="ss"><div class="ss-v">91</div><div class="ss-l">Rotación</div></div>
+              <div class="ss"><div class="ss-v">79</div><div class="ss-l">Hídrico</div></div>
+              <div class="ss"><div class="ss-v">84</div><div class="ss-l">Global</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MAIN ══ -->
+<div id="main-wrap">
+
+  <div class="screen active" id="scr-loading">
+    <div class="load-box">
+      <div class="spin"></div>
+      <div style="text-align:center;">
+        <div class="load-title">Sensorización en curso…</div>
+        <div class="load-sub">Detectando cultivos de Los Sauces — Siyenta S.A.</div>
+      </div>
+      <div class="load-steps">
+        <div class="lstep"><div class="dot run" id="d0"></div><span class="lstx">Reconociendo el establecimiento</span></div>
+        <div class="lstep"><div class="dot wait" id="d1"></div><span class="lstx">Detectando cultivos y etapa fenológica</span></div>
+        <div class="lstep"><div class="dot wait" id="d2"></div><span class="lstx">Analizando historial productivo</span></div>
+        <div class="lstep"><div class="dot wait" id="d3"></div><span class="lstx">Seleccionando convenios con mejor fit</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="scr-reco">
+    <div class="cat-bar" id="cat-bar"></div>
+    <div class="reco-panes" style="flex:1;min-height:0;">
+      <div class="list-col"><div class="list-inner" id="reco-list"></div></div>
+      <div class="det-col" id="det-col">
+        <div class="det-empty">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none"><path d="M9 11l3 3L22 4" stroke="#9E9E9E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="#9E9E9E" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <div style="font-size:14px;font-weight:500;">Seleccioná un convenio</div>
+          <div style="font-size:12px;color:var(--g4)">Las condiciones aparecen acá</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL ejecutivo -->
+<div class="modal-bg" id="modal-exec" onclick="if(event.target===this)closeModal('exec')">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtl">Contactar Asesor Bold</div>
+    <div class="mst">Tu asesora Bold puede gestionar este convenio y cerrar la operación hoy.</div>
+    <div class="exec-card">
+      <div class="exec-av">ML</div>
+      <div><div class="exec-nm">María López</div><div class="exec-ro">Asesora Bold</div><div class="exec-suc">Oficina Córdoba</div></div>
+    </div>
+    <div class="mopt"><div class="mopt-ico" style="background:var(--positive-tint);"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 014.18 12 19.79 19.79 0 011.11 3.38 2 2 0 013.09 1.2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.09 9.08A16 16 0 0014.91 16.9l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" stroke="var(--positive)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><div class="mopt-nm">Llamar</div><div class="mopt-st">+54 351 555-0100</div></div><div class="mopt-arr">›</div></div>
+    <div class="mopt"><div class="mopt-ico" style="background:var(--cyan-glow);"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="var(--cyan)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><polyline points="22,6 12,13 2,6" stroke="var(--cyan)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div><div class="mopt-nm">Enviar mail</div><div class="mopt-st">maria@bold-agro.ai</div></div><div class="mopt-arr">›</div></div>
+    <div class="mopt"><div class="mopt-ico" style="background:var(--bg-elevated);"><svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="5" y="2" width="14" height="20" rx="2" stroke="var(--text-muted)" stroke-width="1.8"/><path d="M12 18h.01" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round"/></svg></div><div><div class="mopt-nm">Solicitar turno</div><div class="mopt-st">Visita presencial</div></div><div class="mopt-arr">›</div></div>
+    <button class="mbtn-cancel" onclick="closeModal('exec')">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL proveedor -->
+<div class="modal-bg" id="modal-prov" onclick="if(event.target===this)closeModal('prov')">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtl">Notificar al proveedor</div>
+    <div class="mst">El banco genera demanda para el merchant. Se enviará una notificación con el interés del productor.</div>
+    <div class="prov-card"><div class="prov-to">Para</div><div class="prov-name" id="prov-name">–</div><div class="prov-sub" id="prov-sub">–</div></div>
+    <div class="email-preview"><div class="ep-subject" id="prov-subject">–</div><div class="ep-body" id="prov-body">–</div></div>
+    <button class="send-btn" onclick="sendProvMsg()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><line x1="22" y1="2" x2="11" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><polygon points="22 2 15 22 11 13 2 9 22 2" fill="currentColor" opacity=".6"/></svg>Enviar notificación</button>
+    <button class="mbtn-cancel" onclick="closeModal('prov')">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL compartir -->
+<div class="modal-bg" id="modal-share" onclick="if(event.target===this)closeModal('share')">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtl">Compartir con el productor</div>
+    <div class="mst">Resumen del convenio seleccionado para enviar a Siyenta S.A.</div>
+    <div class="email-preview" id="share-content"></div>
+    <button class="send-btn" onclick="closeModal('share')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><polyline points="16 6 12 2 8 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="2" x2="12" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Copiar y compartir</button>
+    <button class="mbtn-cancel" onclick="closeModal('share')">Cancelar</button>
+  </div>
+</div>
+
+<script>
+// ══ DATA ══
+const CLIENTE = {
+  nombre:'Los Sauces', empresa:'Siyenta S.A.',
+  provincia:'Córdoba', partido:'General Roca',
+  haTotal:340,
+  cultivos:[
+    {cultivo:'soja', ha:210, etapa:'pre_siembra', label:'Soja', emoji:'🌾'},
+    {cultivo:'maiz', ha:130, etapa:'pre_siembra', label:'Maíz', emoji:'🌽'},
+  ],
+  etapa:'pre_siembra',
+  historial:{soja:1, maiz:0.85, trigo:0.55, girasol:0.2},
+  sustScore:84,
+};
+
+const CATALOG = [
+  {id:4,nombre:'SYNGENTA AGRO S.A.',cat:'semillas',subcat:'semillas_certificadas',ars:true,usd:true,tna0:true,sub:true,tnaMin:0,cultivos:['maiz','soja','trigo','girasol'],etapas:['pre_siembra','siembra'],subs:[{mon:'ARS',tna:10.42,subsidio:6,plazo:'90 días',am:'Bullet'},{mon:'ARS',tna:23.15,subsidio:6,plazo:'180 días',am:'Bullet'},{mon:'ARS',tna:29.55,subsidio:6,plazo:'360 días',am:'Bullet'},{mon:'USD',tna:0,subsidio:4.9,plazo:'90 días',am:'Bullet'},{mon:'USD',tna:0,subsidio:4.9,plazo:'180 días',am:'Bullet'},{mon:'USD',tna:0,subsidio:4.9,plazo:'360 días',am:'Bullet'}]},
+  {id:61,nombre:'GUAZZARONI GRECO SA',cat:'semillas',subcat:'semillas_certificadas',ars:true,usd:true,tna0:true,sub:true,tnaMin:0,cultivos:['maiz','soja','trigo','girasol'],etapas:['pre_siembra','siembra'],subs:[{mon:'ARS',tna:27.59,subsidio:2,plazo:'90 días',am:'Bullet'},{mon:'ARS',tna:33.89,subsidio:2,plazo:'360 días',am:'Bullet'},{mon:'USD',tna:0,subsidio:1,plazo:'90 días',am:'Bullet'},{mon:'USD',tna:3.88,subsidio:1,plazo:'360 días',am:'Bullet'}]},
+  {id:2,nombre:'LARTIRIGOYEN Y CIA SA',cat:'semillas',subcat:'semillas_certificadas',ars:true,usd:true,tna0:false,sub:false,tnaMin:3.9,cultivos:['maiz','soja','trigo','girasol'],etapas:['pre_siembra','siembra'],subs:[{mon:'ARS',tna:36,subsidio:0,plazo:'90 días',am:'Bullet'},{mon:'ARS',tna:36,subsidio:0,plazo:'180 días',am:'Bullet'},{mon:'ARS',tna:36,subsidio:0,plazo:'360 días',am:'Bullet'},{mon:'USD',tna:3.9,subsidio:0,plazo:'90 días',am:'Bullet'},{mon:'USD',tna:4.9,subsidio:0,plazo:'360 días',am:'Bullet'}]},
+  {id:59,nombre:'TOMAS HNOS Y CIA SA',cat:'semillas',subcat:'semillas_certificadas',ars:true,usd:true,tna0:false,sub:false,tnaMin:3.9,cultivos:['maiz','soja','trigo','girasol'],etapas:['pre_siembra','siembra'],subs:[{mon:'ARS',tna:36,subsidio:0,plazo:'90 días',am:'Bullet'},{mon:'USD',tna:3.9,subsidio:0,plazo:'90 días',am:'Bullet'},{mon:'USD',tna:4.9,subsidio:0,plazo:'360 días',am:'Bullet'}]},
+  {id:60,nombre:'FEDEA SA',cat:'semillas',subcat:'semillas_certificadas',ars:true,usd:true,tna0:false,sub:false,tnaMin:3.9,cultivos:['maiz','soja','trigo','girasol'],etapas:['pre_siembra','siembra'],subs:[{mon:'ARS',tna:36,subsidio:0,plazo:'180 días',am:'Bullet'},{mon:'USD',tna:3.9,subsidio:0,plazo:'180 días',am:'Bullet'}]},
+  {id:5,nombre:'ADAMA ARGENTINA SA',cat:'proteccion_cultivos',subcat:'herbicidas_fungicidas',ars:true,usd:true,tna0:true,sub:true,tnaMin:0,cultivos:['maiz','soja','trigo','girasol'],etapas:['pre_siembra','desarrollo','proteccion'],subs:[{mon:'ARS',tna:36,subsidio:0,plazo:'90 días',am:'Bullet'},{mon:'ARS',tna:36,subsidio:0,plazo:'180 días',am:'Bullet'},{mon:'USD',tna:0,subsidio:4.9,plazo:'90 días',am:'Bullet'},{mon:'USD',tna:0,subsidio:4.9,plazo:'180 días',am:'Bullet'},{mon:'USD',tna:0,subsidio:4.9,plazo:'360 días',am:'Bullet'}]},
+  {id:62,nombre:'STOLLER ARGENTINA S.A.',cat:'proteccion_cultivos',subcat:'nutricion_bioestimulantes',ars:true,usd:true,tna0:false,sub:false,tnaMin:3.9,cultivos:['maiz','soja','trigo','girasol'],etapas:['pre_siembra','desarrollo','proteccion'],subs:[{mon:'ARS',tna:36,subsidio:0,plazo:'90 días',am:'Bullet'},{mon:'USD',tna:3.9,subsidio:0,plazo:'90 días',am:'Bullet'}]},
+  {id:63,nombre:'ATANOR SCA',cat:'fertilizantes',subcat:'nitrogeno',ars:true,usd:true,tna0:true,sub:true,tnaMin:0,cultivos:['maiz','soja','trigo','girasol'],etapas:['pre_siembra','siembra','desarrollo'],subs:[{mon:'ARS',tna:36,subsidio:0,plazo:'90 días',am:'Bullet'},{mon:'ARS',tna:36,subsidio:0,plazo:'180 días',am:'Bullet'},{mon:'USD',tna:0,subsidio:4.9,plazo:'90 días',am:'Bullet'},{mon:'USD',tna:0,subsidio:4.9,plazo:'180 días',am:'Bullet'},{mon:'USD',tna:0,subsidio:4.9,plazo:'360 días',am:'Bullet'}]},
+  {id:17,nombre:'BBVA SITE',cat:'financiamiento',subcat:'prestamo_campana',ars:true,usd:true,tna0:true,sub:true,tnaMin:0,cultivos:['maiz','soja','trigo','girasol'],etapas:['pre_siembra','siembra','desarrollo','proteccion','cosecha','poscosecha'],subs:[{mon:'ARS',tna:36,subsidio:0,plazo:'90 días',am:'Bullet'},{mon:'ARS',tna:36,subsidio:0,plazo:'180 días',am:'Bullet'},{mon:'USD',tna:0,subsidio:4.5,plazo:'90 días',am:'Bullet'},{mon:'USD',tna:0,subsidio:4.5,plazo:'180 días',am:'Bullet'},{mon:'USD',tna:0,subsidio:4.5,plazo:'360 días',am:'Bullet'}]},
+  {id:35,nombre:'AKRON SA',cat:'maquinaria',subcat:'maquinaria_agricola',ars:true,usd:true,tna0:true,sub:true,tnaMin:0,cultivos:['maiz','soja','trigo','girasol'],etapas:['pre_siembra','siembra','cosecha'],subs:[{mon:'ARS',tna:18,subsidio:25,plazo:'4 años',am:'Alemán'},{mon:'USD',tna:0,subsidio:15,plazo:'4 años',am:'Alemán'}]},
+  {id:14,nombre:'PAUNY',cat:'maquinaria',subcat:'maquinaria_agricola',ars:true,usd:true,tna0:true,sub:true,tnaMin:0,cultivos:['maiz','soja','trigo','girasol'],etapas:['pre_siembra','siembra','cosecha'],subs:[{mon:'ARS',tna:29,subsidio:10,plazo:'4 años',am:'Alemán'},{mon:'USD',tna:0,subsidio:15,plazo:'4 años',am:'Alemán'}]},
+  {id:21,nombre:'AGCO ARGENTINA',cat:'maquinaria',subcat:'maquinaria_agricola',ars:true,usd:true,tna0:false,sub:true,tnaMin:2.25,cultivos:['maiz','soja','trigo','girasol'],etapas:['pre_siembra','siembra','cosecha'],subs:[{mon:'ARS',tna:27.5,subsidio:12,plazo:'4 años',am:'Alemán'},{mon:'USD',tna:2.25,subsidio:12,plazo:'4 años',am:'Alemán'}]},
+  {id:50,nombre:'MAINERO',cat:'maquinaria',subcat:'cabezales_cosecha',ars:true,usd:false,tna0:false,sub:true,tnaMin:25.5,cultivos:['maiz','soja','trigo','girasol'],etapas:['pre_siembra','siembra','cosecha'],subs:[{mon:'ARS',tna:25.5,subsidio:15,plazo:'4 años',am:'Alemán'}]},
+  {id:55,nombre:'METALFOR',cat:'maquinaria',subcat:'maquinaria_agricola',ars:true,usd:true,tna0:false,sub:true,tnaMin:2.25,cultivos:['maiz','soja','trigo','girasol'],etapas:['pre_siembra','siembra','cosecha'],subs:[{mon:'ARS',tna:27.5,subsidio:12,plazo:'4 años',am:'Alemán'},{mon:'USD',tna:2.25,subsidio:12,plazo:'4 años',am:'Alemán'}]},
+];
+
+const CAT_LABEL={semillas:'Semillas',proteccion_cultivos:'Protección',fertilizantes:'Fertilizantes',financiamiento:'Financiamiento',maquinaria:'Maquinaria'};
+const CAT_COLORS={semillas:{bg:'#E2F5EC',fg:'#1B7A55'},proteccion_cultivos:{bg:'#E5EFF8',fg:'#1473B7'},fertilizantes:{bg:'#FEF3DE',fg:'#B86B00'},financiamiento:{bg:'#EDE5F8',fg:'#6A35B0'},maquinaria:{bg:'#F2F2F2',fg:'#555'}};
+const SUBCAT_LABEL={semillas_certificadas:'Semillas certificadas',herbicidas_fungicidas:'Herbicidas y fungicidas',nutricion_bioestimulantes:'Nutrición y bioestimulantes',nitrogeno:'Fertilizantes nitrogenados',prestamo_campana:'Préstamo de campaña',maquinaria_agricola:'Maquinaria agrícola',cabezales_cosecha:'Cabezales de cosecha'};
+const ETAPA_LABEL={pre_siembra:'pre-siembra',siembra:'siembra',desarrollo:'desarrollo vegetativo',proteccion:'período de protección',cosecha:'cosecha',poscosecha:'post-cosecha'};
+const MC={4:{nombre:'Syngenta Agro S.A.',distribuidor:'Red distribuidores Syngenta'},61:{nombre:'Guazzaroni Greco SA',distribuidor:'Agencia regional Córdoba'},2:{nombre:'Lartirigoyen y Cía SA',distribuidor:'Distribución propia'},59:{nombre:'Tomás Hnos y Cía SA',distribuidor:'Red comercial propia'},60:{nombre:'Fedea SA',distribuidor:'Distribuidores zona Pampeana'},5:{nombre:'Adama Argentina SA',distribuidor:'Red nacional Adama'},62:{nombre:'Stoller Argentina S.A.',distribuidor:'Agencia Córdoba Norte'},63:{nombre:'Atanor SCA',distribuidor:'Distribución ATANOR'},17:{nombre:'BBVA',distribuidor:'Sucursales BBVA Agro'},35:{nombre:'AKRON SA',distribuidor:'Concesionario oficial'},14:{nombre:'Pauny',distribuidor:'Red concesionarios Pauny'},21:{nombre:'AGCO Argentina',distribuidor:'Concesionarios AGCO'},50:{nombre:'Mainero',distribuidor:'Distribuidores Mainero'},55:{nombre:'Metalfor',distribuidor:'Concesionarios Metalfor'}};
+
+// ══ SCORING (multicrop) ══
+const W={cultivo:3,etapa:2,subsidio:1,tna0:1,esp:0.8};
+function scoreConv(c){
+  let best=0;
+  CLIENTE.cultivos.forEach(cr=>{
+    const sc=c.cultivos.includes(cr.cultivo)?1:0;
+    const se=c.etapas.includes(CLIENTE.etapa)?1:(c.etapas.includes('general')?0.5:0);
+    const sh=CLIENTE.historial[cr.cultivo]||0;
+    const raw=W.cultivo*sc+W.etapa*se+sh+(c.sub?W.subsidio:0)+(c.tna0?W.tna0:0)+(['maquinaria_agricola','prestamo_campana'].includes(c.subcat)?W.esp*0.5:W.esp);
+    const haPct=cr.ha/CLIENTE.haTotal;
+    best=Math.max(best,raw*(0.6+0.4*haPct));
+  });
+  return +best.toFixed(3);
+}
+function tier(sc,top){
+  const r=top>0?sc/top:0;
+  if(r>=0.88)return{label:'Muy recomendado',color:'var(--gn)',cls:'tg'};
+  if(r>=0.68)return{label:'Recomendado',color:'var(--bl)',cls:'tb'};
+  if(r>=0.42)return{label:'Buena opción',color:'var(--am)',cls:'ta'};
+  return{label:'Disponible',color:'var(--g4)',cls:'tgr'};
+}
+function inits(n){const w=n.trim().split(' ');return w.length===1?w[0].slice(0,2).toUpperCase():(w[0][0]+w[1][0]).toUpperCase();}
+
+let ranked=[],selId=null,activeFilter='todos';
+
+function buildRanked(){
+  const sc=CATALOG.map(c=>({...c,_sc:scoreConv(c)}));
+  const top=Math.max(...sc.map(c=>c._sc));
+  sc.sort((a,b)=>b._sc-a._sc);
+  ranked=sc.map((c,i)=>({...c,_rank:i+1,_tier:tier(c._sc,top),_top:top}));
+}
+
+function buildCatBar(){
+  const cnt={};ranked.forEach(c=>{cnt[c.cat]=(cnt[c.cat]||0)+1;});
+  const cats=[{id:'todos',label:'Todos',n:ranked.length}];
+  Object.entries(CAT_LABEL).forEach(([k,v])=>{if(cnt[k])cats.push({id:k,label:v,n:cnt[k]});});
+  document.getElementById('cat-bar').innerHTML=cats.map(c=>`<button class="cat-chip${c.id===activeFilter?' active':''}" onclick="setFilter('${c.id}')">${c.label}<span class="n">${c.n}</span></button>`).join('');
+}
+function setFilter(f){activeFilter=f;buildCatBar();renderList();}
+
+function renderList(){
+  const list=activeFilter==='todos'?ranked:ranked.filter(c=>c.cat===activeFilter);
+  document.getElementById('reco-list').innerHTML=list.map(c=>{
+    const col=CAT_COLORS[c.cat]||{bg:'#F2F2F2',fg:'#555'};
+    const fill=Math.round(c._sc/ranked[0]._sc*100);
+    const bestU=c.subs.filter(s=>s.mon==='USD').sort((a,b)=>a.tna-b.tna)[0];
+    const condTag=bestU?(bestU.tna===0?'0% TNA USD':`${bestU.tna}% TNA USD`):`${c.subs[0].tna}% TNA ARS`;
+    const matchCrops=CLIENTE.cultivos.filter(cr=>c.cultivos.includes(cr.cultivo));
+    return`<div class="ccard${selId===c.id?' selected':''}" onclick="selectCard(${c.id})">
+      <div class="rnk">${c._rank}</div>
+      <div class="ctop">
+        <div class="cico" style="background:${col.bg};color:${col.fg};">${inits(c.nombre)}</div>
+        <div style="min-width:0;"><div class="cnm">${c.nombre}</div><div class="cct">${SUBCAT_LABEL[c.subcat]||c.subcat}</div></div>
+      </div>
+      <div class="cfit">
+        <div class="cfit-bg"><div class="cfit-fill" style="width:${fill}%;background:${c._tier.color};"></div></div>
+        <span class="tpill ${c._tier.cls}">${c._tier.label}</span>
+      </div>
+      ${matchCrops.length?`<div class="crop-bk">${matchCrops.map(cr=>`<span class="crop-ha">${cr.emoji} ${cr.label} · ${cr.ha} ha</span>`).join('')}</div>`:''}
+      <div class="ctags">
+        ${c.tna0?'<span class="tpill tg">0% USD</span>':''}
+        ${c.sub?'<span class="tpill ta">Subsidiado</span>':''}
+        ${c.usd?'<span class="tpill tb">USD</span>':''}
+        <span class="tpill tgr">${condTag}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectCard(id){selId=id;renderList();renderDetail();}
+
+function renderDetail(){
+  const c=ranked.find(x=>x.id===selId);if(!c)return;
+  const col=CAT_COLORS[c.cat]||{bg:'#F2F2F2',fg:'#555'};
+  const mc=MC[c.id]||{nombre:c.nombre,distribuidor:'Distribuidor regional'};
+  const catL=CAT_LABEL[c.cat]||c.cat;
+  const subL=SUBCAT_LABEL[c.subcat]||c.subcat;
+  const usdS=c.subs.filter(s=>s.mon==='USD').sort((a,b)=>a.tna-b.tna);
+  const arsS=c.subs.filter(s=>s.mon==='ARS').sort((a,b)=>a.tna-b.tna);
+  const bU=usdS[0]||null,bA=arsS[0]||null;
+  const matchCrops=CLIENTE.cultivos.filter(cr=>c.cultivos.includes(cr.cultivo));
+  const etapaMatch=c.etapas.includes(CLIENTE.etapa);
+
+  // ── Agronomic insight library: crop × etapa × category ──
+  const AGRO = {
+    soja: {
+      pre_siembra: {
+        semillas: 'En pre-siembra de soja, la elección del cultivar define el techo de rendimiento para toda la campaña. La resistencia a roya asiática y la adaptación al grupo de madurez de General Roca son determinantes.',
+        proteccion_cultivos: 'El control de malezas resistentes antes de la siembra es crítico en soja. Un lote limpio en pre-siembra reduce presión durante el período crítico de floración y define el stand de plantas.',
+        fertilizantes: 'La soja responde a fósforo y azufre aplicados en pre-siembra. La deficiencia de azufre limita la fijación biológica de nitrógeno — el nutriente más barato de la campaña si se gestiona temprano.',
+        maquinaria: 'Con 210 ha de soja, contar con maquinaria propia para siembra directa reduce dependencia de contratistas y permite ajustar la fecha de siembra a la ventana climática óptima de Córdoba.',
+        financiamiento: 'Pre-siembra es el momento de mayor necesidad de capital. Financiar los insumos del ciclo con un préstamo de campaña libera flujo para cubrir otros costos operativos sin presionar la caja.',
+      },
+      siembra: {
+        semillas: 'El inoculante en base líquida con soja ya sembrada necesita complementarse con la semilla correcta. Un cultivar de probada nodulación en zona núcleo puede marcar 3 a 5 qq de diferencia en rinde final.',
+        proteccion_cultivos: 'Los primeros estadios de soja son ventana clave para orugas defoliadoras. El daño por Anticarsia en V3-V5 afecta el área foliar antes del cierre de canopeo y la recuperación es lenta.',
+        fertilizantes: 'La aplicación de azufre en cobertura temprana mejora la nodulación activa. En suelos con histórico de soja-maíz como este lote, la demanda de azufre aumenta con cada campaña.',
+        maquinaria: 'Una sembradora con dosificación variable permite ajustar la densidad por zona dentro del mismo lote, aprovechando la variabilidad de suelo que este establecimiento tiene documentada.',
+        financiamiento: 'Financiar los costos de implantación en el arranque de siembra evita tener que liquidar granos de la campaña anterior antes del momento comercial óptimo.',
+      },
+      desarrollo: {
+        semillas: 'En pleno desarrollo vegetativo, el convenio de semillas para la próxima campaña se contrata ahora con precios más favorables y disponibilidad asegurada.',
+        proteccion_cultivos: 'En R1-R3, soja es muy sensible a trips y chinche. El daño en floración puede reducir el número de vainas fijadas en un 15-20%. El control preventivo es más efectivo que el curativo.',
+        fertilizantes: 'En desarrollo vegetativo, la soja puede mostrar síntomas de deficiencia de hierro en suelos de pH alto. Una aplicación foliar de micronutrientes en V6-V8 previene clorosis ferropénica.',
+        maquinaria: 'La pulverización en período crítico de soja requiere precisión horaria. Equipos de trabajo nocturno con barra de luces mejoran la cobertura y reducen la deriva en las horas de calor.',
+        financiamiento: 'Con el cultivo en desarrollo, el financiamiento puente permite cubrir costos de protección y logística sin esperar la cosecha.',
+      },
+      proteccion: {
+        semillas: 'El convenio de semillas para la próxima campaña se puede gestionar ahora en plena campaña, asegurando variedad y precio antes de que el mercado se reactive en post-cosecha.',
+        proteccion_cultivos: 'En R3-R5, la soja es altamente susceptible a roya asiática y Septoria. Una aplicación con mezcla de triazol + estrobilurina en el momento exacto de cierre de canopeo puede valer 8-12 qq/ha.',
+        fertilizantes: 'El boro en estadio reproductivo mejora la fertilización de las flores y el llenado de granos. La deficiencia foliar de boro en R1-R2 es silenciosa pero reduce el set de vainas.',
+        maquinaria: 'En período de protección, la velocidad de aplicación es crítica. Una pulverizadora de alto volumen con GPS y corte de sección reduce la sobrexposición a agroquímicos y el costo por hectárea.',
+        financiamiento: 'Los costos de protección en R3-R5 son los de mayor impacto sobre el rinde final. Financiarlos en dólares a tasa subsidiada es la mejor relación costo-beneficio de toda la campaña.',
+      },
+      cosecha: {
+        semillas: 'Post-cosecha es el momento ideal para definir el material genético de la próxima soja. Los resultados propios del lote son el mejor insumo para la elección de variedad.',
+        proteccion_cultivos: 'Desecación química en pre-cosecha permite ajustar la humedad del grano y reducir pérdidas por apertura anticipada de vainas en soja indeterminada.',
+        fertilizantes: 'La cosecha extrae nutrientes del suelo. Un análisis de suelo post-cosecha informa el plan de fertilización para el maíz de segunda o la siembra de trigo que viene en el esquema de rotación.',
+        maquinaria: 'Con 210 ha de soja, una cabezal flexible de 30-35 pies reduce las pérdidas en cabeceras y mejora la eficiencia de trilla en los momentos de alta humedad relativa matinal.',
+        financiamiento: 'El financiamiento de cosecha cubre el costo de la trilla contratada y el flete sin necesidad de vender el grano a precio de cosecha, que históricamente es el momento de menor precio.',
+      },
+    },
+    maiz: {
+      pre_siembra: {
+        semillas: 'Con 130 ha de maíz en zona núcleo cordobesa, la elección del híbrido según aptitud de suelo y fecha de siembra es el insumo de mayor retorno. Los híbridos de alto potencial en suelos clase 1-2 pueden superar los 120 qq/ha.',
+        proteccion_cultivos: 'El control de malezas en barbecho de maíz define el banco de semillas del lote. Gramíneas otoñales no controladas generan competencia temprana y reducen el stand de plantas en V2-V3.',
+        fertilizantes: 'El maíz es el cultivo más respondedor a nitrógeno. En pre-siembra, un análisis de NO3 en profundidad permite calcular la dosis exacta y evitar la sobre-fertilización que afecta rentabilidad y suelo.',
+        maquinaria: 'La siembra de precisión en maíz es clave. Una sembradora con sistema de vacío y control de singulación garantiza la densidad objetivo y el espaciado entre plantas que define el techo de rinde.',
+        financiamiento: 'Los costos de implantación de maíz son los más altos de la rotación. Un préstamo de campaña en dólares a tasa subsidiada es la forma más eficiente de financiar el arranque.',
+      },
+      siembra: {
+        semillas: 'La ventana de siembra de maíz en Córdoba es estrecha. Tener el híbrido correcto disponible en el momento exacto puede valer 15-20 qq/ha frente a una siembra tardía.',
+        proteccion_cultivos: 'El tratamiento de semilla en maíz es la primera línea de defensa contra trips, pulgón del cogollo y Pythium en siembra directa. El costo es bajo y el seguro agronómico es alto.',
+        fertilizantes: 'El arranque fosforado en la sembradora mejora el desarrollo radicular en los primeros estadios. En suelos de textura media como los de General Roca, la respuesta a fósforo en surco es consistente.',
+        maquinaria: 'La siembra en línea a 52 cm permite mayor densidad y mejor aprovechamiento de agua en años Niña. El ajuste de la sembradora para maíz en este esquema requiere equipos en condiciones.',
+        financiamiento: 'Financiar la siembra en el arranque permite plantar en la fecha óptima sin esperar liquidación de soja de la campaña anterior.',
+      },
+      desarrollo: {
+        semillas: 'El maíz en V6 ya definió su destino agronómico. El convenio de semilla para la próxima campaña se puede pre-comprar ahora con precio y disponibilidad asegurada.',
+        proteccion_cultivos: 'El cogollero (Spodoptera) en V4-V8 es la principal amenaza del maíz en desarrollo. El monitoreo debe ser semanal y el umbral de daño en hoja bandera es muy bajo.',
+        fertilizantes: 'La fertirrigación nitrogenada en V6-V8 en maíz de alto potencial es el momento de mayor eficiencia de uso del nitrógeno. El cultivo consume el 70% del N total entre V6 y floración.',
+        maquinaria: 'Las pulverizaciones en maíz alto requieren equipos con barras elevadas o drones. La aplicación con equipos terrestres convencionales pierde eficacia después de V8 por daño mecánico.',
+        financiamiento: 'En pleno desarrollo vegetativo, los costos de protección y fertilización en cobertura son los de mayor impacto en el rinde final.',
+      },
+      proteccion: {
+        semillas: 'La elección de híbrido para la próxima campaña se puede gestionar hoy, con la información fresca de comportamiento de esta campaña en el mismo lote.',
+        proteccion_cultivos: 'En VT-R1, el maíz es muy sensible a daño foliar por heladas tempranas en Córdoba sur. El seguimiento climático y la cobertura de hongos de espiga (Fusarium) son prioridad en esta etapa.',
+        fertilizantes: 'En floración, el maíz absorbe nutrientes a máxima velocidad. Una aplicación foliar de zinc y boro mejora la fertilización de espigas y reduce el aborto de granos en la punta.',
+        maquinaria: 'La cosecha de maíz es mecánicamente más exigente que la de soja. Cabezales maiceros con buen sistema de separación de espiga reducen las pérdidas en cosecha que pueden llegar al 5-8%.',
+        financiamiento: 'Los costos de floración a cosecha incluyen monitoreo, protección de espiga y logística de post-cosecha. Financiarlos en dólares es la forma más eficiente de cerrar la campaña.',
+      },
+      cosecha: {
+        semillas: 'Post-cosecha de maíz es el momento para evaluar el híbrido y tomar decisiones de variedad para la próxima campaña con datos de rinde propios.',
+        proteccion_cultivos: 'La desecación con glifosato o diquat en maíz permite uniformizar la humedad antes de cosecha, reducir pérdidas por apertura de chala y mejorar la calidad del grano almacenado.',
+        fertilizantes: 'El maíz extrae 15 kg de K y 3 kg de Zn por tonelada de grano. Un análisis post-cosecha permite planificar la reposición de nutrientes para el próximo ciclo.',
+        maquinaria: 'Los 130 ha de maíz representan la cosecha de mayor exigencia mecánica del lote. Un cabezal maicero propio o financiado reduce el costo de contratista y la dependencia de disponibilidad de terceros.',
+        financiamiento: 'El financiamiento post-cosecha de maíz permite almacenar el grano sin venderlo a precio de cosecha, aprovechando la curva estacional de precio que históricamente sube en el segundo semestre.',
+      },
+    },
+    trigo: {
+      pre_siembra: {
+        semillas: 'La elección de variedad de trigo determina la fecha de siembra y la ventana de cosecha. En el esquema Soja/Maíz/Trigo de este lote, el trigo de ciclo largo permite la doble siembra con soja de segunda.',
+        proteccion_cultivos: 'El control de malezas en barbecho de trigo, especialmente gramíneas como ray-grass resistente, es crítico para el éxito del cultivo. El costo de no controlarlas en barbecho se multiplica en el cultivo.',
+        fertilizantes: 'El trigo responde a nitrógeno y fósforo. La aplicación de fósforo en pre-siembra es más eficiente que en cobertura. En suelos con 5 campañas de historia, la extracción acumulada es alta.',
+        maquinaria: 'La siembra de trigo con sembradora de alta precisión en suelo con rastrojo de maíz requiere equipos con buen sistema de corte para evitar la acumulación de material vegetal en el surco.',
+        financiamiento: 'El trigo es el cultivo de menor costo de implantación de la rotación pero el primero del año agrícola. Financiar el arranque en dólares libera capital para los cultivos de verano.',
+      },
+    },
+    girasol: {
+      pre_siembra: {
+        semillas: 'El girasol de alto oleico permite diferenciar el precio final entre un 15-25% respecto al estándar. La elección del híbrido según zona y mercado es la decisión más rentable de la campaña.',
+        proteccion_cultivos: 'El botón floral de girasol es muy sensible a Sclerotinia sclerotiorum. La aplicación preventiva en R2-R3 es determinante para el rendimiento y la calidad del grano.',
+        fertilizantes: 'El girasol responde a fósforo y boro. La deficiencia de boro en floración impacta directamente la formación del capítulo y la fijación de semillas.',
+        maquinaria: 'La cosecha de girasol requiere cabezal específico con cuchillas laterales. Alquilar versus financiar equipo propio marca la diferencia en el timing de cosecha.',
+        financiamiento: 'El girasol tiene uno de los mejores márgenes de la rotación. Financiar la implantación en dólares a tasa cero maximiza el retorno sobre el capital propio invertido.',
+      },
+    },
+  };
+
+  // Build agronomic explanation
+  function getAgroInsight(cultivo, etapa, cat){
+    return (AGRO[cultivo]&&AGRO[cultivo][etapa]&&AGRO[cultivo][etapa][cat])
+      ? AGRO[cultivo][etapa][cat]
+      : null;
+  }
+
+  // Financial pitch suffix
+  function finPitch(c, merchant){
+    const bU=c.subs.filter(s=>s.mon==='USD').sort((a,b)=>a.tna-b.tna)[0];
+    const bA=c.subs.filter(s=>s.mon==='ARS').sort((a,b)=>a.tna-b.tna)[0];
+    if(bU&&bU.tna===0)
+      return `<strong>${merchant}</strong> te permite financiar esto a <strong>tasa 0% en dólares</strong> — cubrís el gasto sin costo financiero si cancelás en ${bU.plazo}.`;
+    if(bU)
+      return `<strong>${merchant}</strong> ofrece financiación en USD al <strong>${bU.tna}% TNA</strong> hasta ${bU.plazo}.`;
+    if(bA)
+      return `<strong>${merchant}</strong> ofrece financiación en ARS al <strong>${bA.tna}% TNA</strong>${bA.subsidio>0?` (con subsidio del ${bA.subsidio}%)`:''}`;
+    return `<strong>${merchant}</strong> disponible a través del Buscador de Convenios Bold.`;
+  }
+
+  let expl='';
+  const merchant = c.nombre;
+
+  if(matchCrops.length===0){
+    expl = `Convenio de aplicación general para el establecimiento. ${finPitch(c,merchant)}`;
+  } else if(matchCrops.length===1){
+    const cr=matchCrops[0];
+    const insight=getAgroInsight(cr.cultivo,CLIENTE.etapa,c.cat);
+    const haStr=`<strong>${cr.emoji} ${cr.label} (${cr.ha} ha)</strong>`;
+    if(insight){
+      expl=`Tu lote tiene ${haStr} en etapa de ${ETAPA_LABEL[CLIENTE.etapa]||CLIENTE.etapa}. ${insight} ${finPitch(c,merchant)}`;
+    } else {
+      expl=`Este convenio cubre ${haStr} en ${ETAPA_LABEL[CLIENTE.etapa]||CLIENTE.etapa}. ${finPitch(c,merchant)}`;
+    }
+  } else {
+    // Multicrop: show insight for the biggest ha crop first, then mention the other
+    const primary=matchCrops.reduce((a,b)=>a.ha>=b.ha?a:b);
+    const secondary=matchCrops.filter(cr=>cr.cultivo!==primary.cultivo);
+    const insight=getAgroInsight(primary.cultivo,CLIENTE.etapa,c.cat);
+    const primStr=`<strong>${primary.emoji} ${primary.label} (${primary.ha} ha)</strong>`;
+    const secStr=secondary.map(cr=>`<strong>${cr.emoji} ${cr.label} (${cr.ha} ha)</strong>`).join(' y ');
+    const coverStr=`Este convenio cubre ${primStr}${secStr?` y ${secStr}`:''} del lote.`;
+    if(insight){
+      expl=`${coverStr} ${insight} ${finPitch(c,merchant)}`;
+    } else {
+      expl=`${coverStr} Exactamente los cultivos de la campaña actual en pre-siembra. ${finPitch(c,merchant)}`;
+    }
+    const histMatch=matchCrops.filter(cr=>(CLIENTE.historial[cr.cultivo]||0)>0.7);
+    if(histMatch.length){
+      expl+=` El historial de 5 campañas en ${histMatch.map(cr=>cr.label).join(' y ')} refuerza el perfil de elegibilidad.`;
+    }
+  }
+
+  const subRows=c.subs.slice(0,5).map(s=>`
+    <div class="sub-row">
+      <div class="smon ${s.mon==='USD'?'susd':'sars'}">${s.mon}</div>
+      <div class="sds">${s.am} · ${s.plazo}</div>
+      <div class="stna"><div class="stna-v${s.tna===0?' green':''}">${s.tna===0?'0%':s.tna+'%'}</div><div class="stna-l">TNA</div>${s.subsidio>0?`<div class="ssub">Sub. ${s.subsidio}%</div>`:''}</div>
+    </div>`).join('');
+
+  document.getElementById('det-col').innerHTML=`
+    <div class="det-card">
+      <div class="det-hdr">
+        <div class="det-hero">
+          <div class="det-ico" style="background:${col.bg};color:${col.fg};">${inits(c.nombre)}</div>
+          <div style="flex:1;min-width:0;"><div class="det-nm">${c.nombre}</div><div class="det-cat">${catL} · ${subL}</div></div>
+          <span class="tpill ${c._tier.cls}" style="flex-shrink:0;font-size:11px;padding:4px 10px;">${c._tier.label}</span>
+        </div>
+      </div>
+      <div class="expl-block expl-blue">
+        <span class="expl-tag">Por qué se recomienda</span>${expl}
+      </div>
+      <div class="expl-block expl-green" style="margin-top:8px;">
+        <span class="expl-tag">🌱 Sustentabilidad</span>
+        Score 84/100 — Rotación Soja→Maíz→Trigo verificada en 5 campañas sin deforestación. Potencia el acceso a las mejores condiciones de financiamiento.
+      </div>
+      <div class="cgrid">
+        <div class="cbox"><div class="clbl">Mejor TNA</div><div class="cv${bU&&bU.tna===0?' cv-g':''}">${bU?(bU.tna===0?'0%':bU.tna+'%'):(bA?bA.tna+'%':'–')}</div></div>
+        <div class="cbox"><div class="clbl">Monedas</div><div class="cv">${[c.ars?'ARS':'',c.usd?'USD':''].filter(Boolean).join(' / ')}</div></div>
+        <div class="cbox"><div class="clbl">Subsidiado</div><div class="cv cv-g">${c.sub?'Sí':'No'}</div></div>
+        <div class="cbox"><div class="clbl">Amortización</div><div class="cv" style="font-size:12px;">${c.subs[0].am}</div></div>
+      </div>
+      <div class="subs-hdr">Líneas disponibles</div>
+      <div class="subs-wrap">${subRows}</div>
+      <div class="cta-section">
+        <div class="cta-row">
+          <button class="cta-btn cta-exec" onclick="openModal('exec')">
+            <div class="cta-ico"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" stroke="white" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="7" r="4" stroke="white" stroke-width="2"/></svg></div>
+            <div><div class="cta-title">Asesor Bold</div><div class="cta-sub">Gestionar ahora</div></div>
+          </button>
+          <button class="cta-btn cta-prov" onclick="openProvModal(${c.id})">
+            <div class="cta-ico"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div><div class="cta-title">Avisar al proveedor</div><div class="cta-sub">${mc.distribuidor}</div></div>
+          </button>
+        </div>
+        <button class="cta-btn cta-share" onclick="openShareModal(${c.id})">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="18" cy="5" r="3" stroke="var(--bl)" stroke-width="1.8"/><circle cx="6" cy="12" r="3" stroke="var(--bl)" stroke-width="1.8"/><circle cx="18" cy="19" r="3" stroke="var(--bl)" stroke-width="1.8"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" stroke="var(--bl)" stroke-width="1.8"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" stroke="var(--bl)" stroke-width="1.8"/></svg>
+          Compartir análisis con el productor
+        </button>
+      </div>
+    </div>`;
+}
+
+// ══ MODALS ══
+function openModal(id){document.getElementById('modal-'+id).classList.add('show');}
+function closeModal(id){document.getElementById('modal-'+id).classList.remove('show');}
+
+function openProvModal(cid){
+  const c=ranked.find(x=>x.id===cid);
+  const mc=MC[cid]||{nombre:c.nombre,distribuidor:'–'};
+  const subL=SUBCAT_LABEL[c.subcat]||c.cat;
+  const bU=c.subs.filter(s=>s.mon==='USD').sort((a,b)=>a.tna-b.tna)[0];
+  const condStr=bU?(bU.tna===0?`0% TNA en USD · hasta ${bU.plazo}`:`${bU.tna}% TNA USD`):`${c.subs[0].tna}% TNA ARS`;
+  const cropStr=CLIENTE.cultivos.filter(cr=>c.cultivos.includes(cr.cultivo)).map(cr=>`${cr.emoji} ${cr.label} ${cr.ha} ha`).join(' + ')||'cultivo general';
+  document.getElementById('prov-name').textContent=mc.nombre;
+  document.getElementById('prov-sub').textContent=mc.distribuidor;
+  document.getElementById('prov-subject').innerHTML=`Asunto: <strong>Nuevo cliente Bold — interés en ${subL}</strong>`;
+  document.getElementById('prov-body').innerHTML=`El productor <span class="ep-hi">${CLIENTE.empresa}</span> (${CLIENTE.nombre}, ${CLIENTE.partido}, ${CLIENTE.provincia}) tiene <span class="ep-hi">${cropStr}</span> en pre-siembra y manifestó interés en su convenio de <span class="ep-hi">${subL}</span> a través del Buscador de Convenios Bold.<br><br>Condición disponible: <span class="ep-hi">${condStr}</span>. Score de sustentabilidad: <span class="ep-hi">84/100 🌱</span>.<br><br>El productor autorizó el contacto. Coordinar cotización a la brevedad.`;
+  openModal('prov');
+}
+
+function sendProvMsg(){
+  closeModal('prov');
+  const btn=document.querySelector('#det-col .cta-prov');
+  if(btn){
+    const orig=btn.innerHTML;
+    btn.innerHTML='<div class="cta-ico">✓</div><div><div class="cta-title">¡Enviado!</div><div class="cta-sub">Proveedor notificado</div></div>';
+    btn.style.background='var(--gn)';
+    setTimeout(()=>{btn.innerHTML=orig;btn.style.background='';},2800);
+  }
+}
+
+function openShareModal(cid){
+  const c=ranked.find(x=>x.id===cid);
+  const subL=SUBCAT_LABEL[c.subcat]||c.cat;
+  const bU=c.subs.filter(s=>s.mon==='USD').sort((a,b)=>a.tna-b.tna)[0];
+  const condStr=bU?(bU.tna===0?`0% TNA USD · hasta ${bU.plazo}`:`${bU.tna}% TNA USD`):`${c.subs[0].tna}% TNA ARS`;
+  document.getElementById('share-content').innerHTML=`<div class="ep-subject">Convenio recomendado por Bold</div><div class="ep-body">Establecimiento: <span class="ep-hi">Los Sauces · Siyenta S.A.</span><br>Campaña: 🌾 Soja 210 ha + 🌽 Maíz 130 ha · Pre-siembra · Córdoba<br>Sustentabilidad: <span class="ep-hi">84/100 🌱</span><br><br>Convenio: <span class="ep-hi">${c.nombre}</span><br>Categoría: ${subL}<br>Condición: <span class="ep-hi">${condStr}</span><br><br>Asesora Bold: María López · Córdoba Centro · +54 351 555-0100</div>`;
+  openModal('share');
+}
+
+// ══ COLLAPSIBLE ══
+let detailOpen=false;
+function toggleDetail(){
+  detailOpen=!detailOpen;
+  document.getElementById('detail-panel').classList.toggle('open',detailOpen);
+  document.getElementById('btn-detail').classList.toggle('open',detailOpen);
+  setTimeout(updatePadding,50);
+  setTimeout(updatePadding,360);
+}
+function updatePadding(){
+  document.getElementById('main-wrap').style.paddingTop=document.getElementById('fixed-top').offsetHeight+'px';
+}
+
+// ══ LOADING ══
+function runLoading(){
+  updatePadding();
+  [0,900,1700,2500].forEach((ms,i)=>setTimeout(()=>{
+    for(let j=0;j<i;j++)document.getElementById('d'+j).className='dot done';
+    document.getElementById('d'+i).className='dot run';
+  },ms));
+  setTimeout(()=>{
+    for(let j=0;j<4;j++)document.getElementById('d'+j).className='dot done';
+    setTimeout(showReco,400);
+  },3200);
+}
+
+function showReco(){
+  document.getElementById('scr-loading').classList.remove('active');
+  document.getElementById('scr-reco').classList.add('active');
+  buildRanked();buildCatBar();renderList();updatePadding();
+  // Primer convenio abierto por defecto
+  if(ranked.length) selectCard(ranked[0].id);
+}
+
+window.addEventListener('resize',updatePadding);
+runLoading();
+</script>
+</body>
+</html>
